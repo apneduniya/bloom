@@ -1,0 +1,7 @@
+{
+  "name": "render_certificate",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "version": "1.0.0"
+}

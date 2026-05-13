@@ -1,0 +1,483 @@
+{
+  "projectId": "6a031b1b001d7426cef4",
+  "projectName": "Bloom",
+  "endpoint": "https://fra.cloud.appwrite.io/v1",
+  "settings": {
+    "services": {
+      "account": true,
+      "avatars": true,
+      "databases": true,
+      "locale": true,
+      "health": true,
+      "storage": true,
+      "teams": true,
+      "users": true,
+      "sites": true,
+      "functions": true,
+      "graphql": true,
+      "messaging": true
+    },
+    "protocols": {
+      "rest": true,
+      "graphql": true,
+      "websocket": true
+    },
+    "auth": {
+      "methods": {
+        "jwt": true,
+        "phone": true,
+        "invites": true,
+        "anonymous": true,
+        "email-otp": true,
+        "magic-url": true,
+        "email-password": true
+      },
+      "security": {
+        "duration": 31536000,
+        "limit": 0,
+        "sessionsLimit": 0,
+        "passwordHistory": 0,
+        "passwordDictionary": false,
+        "personalDataCheck": false,
+        "sessionAlerts": false,
+        "mockNumbers": []
+      }
+    }
+  },
+  "tablesDB": [
+    {
+      "$id": "bloom",
+      "name": "Bloom",
+      "enabled": true
+    }
+  ],
+  "tables": [
+    {
+      "$id": "blooms",
+      "$permissions": [
+        "create(\"users\")"
+      ],
+      "databaseId": "bloom",
+      "name": "Blooms",
+      "enabled": true,
+      "rowSecurity": true,
+      "columns": [
+        { "key": "title", "type": "text", "required": false, "array": false },
+        { "key": "description", "type": "longtext", "required": false, "array": false },
+        { "key": "templateImageFileId", "type": "text", "required": false, "array": false },
+        { "key": "templateImageDataUrl", "type": "longtext", "required": false, "array": false },
+        { "key": "canvasWidth", "type": "integer", "required": false, "array": false },
+        { "key": "canvasHeight", "type": "integer", "required": false, "array": false },
+        {
+          "key": "status",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "elements": ["draft", "ready", "sending", "sent"],
+          "format": "enum"
+        },
+        { "key": "createdAt", "type": "datetime", "required": false, "array": false },
+        { "key": "updatedAt", "type": "datetime", "required": false, "array": false },
+        { "key": "lastSavedAt", "type": "datetime", "required": false, "array": false },
+        { "key": "version", "type": "integer", "required": false, "array": false },
+        { "key": "ownerId", "type": "varchar", "required": false, "array": false, "size": 255 }
+      ],
+      "indexes": [
+        {
+          "key": "ownerId_updatedAt",
+          "type": "key",
+          "columns": ["ownerId", "updatedAt"],
+          "lengths": [0, 0],
+          "orders": []
+        }
+      ]
+    },
+    {
+      "$id": "text_layers",
+      "$permissions": [
+        "create(\"users\")"
+      ],
+      "databaseId": "bloom",
+      "name": "Text Layers",
+      "enabled": true,
+      "rowSecurity": true,
+      "columns": [
+        { "key": "name", "type": "text", "required": false, "array": false },
+        { "key": "content", "type": "longtext", "required": false, "array": false },
+        { "key": "x", "type": "integer", "required": false, "array": false },
+        { "key": "y", "type": "integer", "required": false, "array": false },
+        { "key": "width", "type": "integer", "required": false, "array": false },
+        { "key": "height", "type": "integer", "required": false, "array": false },
+        { "key": "rotation", "type": "integer", "required": false, "array": false },
+        { "key": "fontFamily", "type": "text", "required": false, "array": false },
+        { "key": "fontSize", "type": "integer", "required": false, "array": false },
+        {
+          "key": "fontWeight",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "elements": ["400", "600", "700"],
+          "format": "enum"
+        },
+        {
+          "key": "fontStyle",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "elements": ["normal", "italic"],
+          "format": "enum"
+        },
+        { "key": "color", "type": "text", "required": false, "array": false },
+        { "key": "opacity", "type": "double", "required": false, "array": false },
+        {
+          "key": "align",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "elements": ["left", "center", "right"],
+          "format": "enum"
+        },
+        { "key": "lineHeight", "type": "double", "required": false, "array": false },
+        { "key": "letterSpacing", "type": "double", "required": false, "array": false },
+        { "key": "zIndex", "type": "integer", "required": false, "array": false },
+        { "key": "locked", "type": "boolean", "required": false, "array": false },
+        { "key": "visible", "type": "boolean", "required": false, "array": false },
+        { "key": "bindingKey", "type": "text", "required": false, "array": false },
+        { "key": "bloomId", "type": "varchar", "required": false, "array": false, "size": 255 }
+      ],
+      "indexes": [
+        {
+          "key": "bloomId",
+          "type": "key",
+          "columns": ["bloomId"],
+          "lengths": [0],
+          "orders": []
+        }
+      ]
+    },
+    {
+      "$id": "data_sources",
+      "$permissions": [
+        "create(\"users\")"
+      ],
+      "databaseId": "bloom",
+      "name": "Data Sources",
+      "enabled": true,
+      "rowSecurity": true,
+      "columns": [
+        {
+          "key": "fileType",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "elements": ["csv"],
+          "format": "enum"
+        },
+        { "key": "fileName", "type": "text", "required": false, "array": false },
+        { "key": "fileId", "type": "text", "required": false, "array": false },
+        { "key": "columnNames", "type": "longtext", "required": false, "array": false },
+        { "key": "rowCount", "type": "integer", "required": false, "array": false },
+        { "key": "rows", "type": "longtext", "required": false, "array": false },
+        { "key": "previewRows", "type": "longtext", "required": false, "array": false },
+        { "key": "uploadedAt", "type": "datetime", "required": false, "array": false },
+        { "key": "bloomId", "type": "varchar", "required": false, "array": false, "size": 255 }
+      ],
+      "indexes": [
+        {
+          "key": "bloomId",
+          "type": "key",
+          "columns": ["bloomId"],
+          "lengths": [0],
+          "orders": []
+        }
+      ]
+    },
+    {
+      "$id": "mappings",
+      "$permissions": [
+        "create(\"users\")"
+      ],
+      "databaseId": "bloom",
+      "name": "Mappings",
+      "enabled": true,
+      "rowSecurity": true,
+      "columns": [
+        { "key": "sourceColumn", "type": "text", "required": false, "array": false },
+        {
+          "key": "targetFieldType",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "elements": ["text_layer", "email_to", "email_subject", "email_body", "attachment_filename"],
+          "format": "enum"
+        },
+        { "key": "targetFieldId", "type": "text", "required": false, "array": false },
+        { "key": "transformRule", "type": "text", "required": false, "array": false },
+        { "key": "bloomId", "type": "varchar", "required": false, "array": false, "size": 255 }
+      ],
+      "indexes": [
+        {
+          "key": "bloomId",
+          "type": "key",
+          "columns": ["bloomId"],
+          "lengths": [0],
+          "orders": []
+        }
+      ]
+    },
+    {
+      "$id": "integrations",
+      "$permissions": [
+        "create(\"users\")"
+      ],
+      "databaseId": "bloom",
+      "name": "Integrations",
+      "enabled": true,
+      "rowSecurity": true,
+      "columns": [
+        {
+          "key": "providerType",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "elements": ["smtp"],
+          "format": "enum"
+        },
+        { "key": "smtpHost", "type": "text", "required": false, "array": false },
+        { "key": "smtpPort", "type": "integer", "required": false, "array": false },
+        { "key": "smtpUser", "type": "text", "required": false, "array": false },
+        { "key": "fromName", "type": "text", "required": false, "array": false },
+        { "key": "fromEmail", "type": "string", "required": false, "array": false, "format": "email" },
+        { "key": "encryptedSecretRef", "type": "text", "required": false, "array": false },
+        {
+          "key": "status",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "elements": ["draft", "verified", "error"],
+          "format": "enum"
+        },
+        { "key": "lastTestedAt", "type": "datetime", "required": false, "array": false },
+        { "key": "errorMessage", "type": "longtext", "required": false, "array": false },
+        { "key": "ownerId", "type": "varchar", "required": false, "array": false, "size": 255 }
+      ],
+      "indexes": [
+        {
+          "key": "ownerId",
+          "type": "key",
+          "columns": ["ownerId"],
+          "lengths": [0],
+          "orders": []
+        }
+      ]
+    },
+    {
+      "$id": "email_drafts",
+      "$permissions": [
+        "create(\"users\")"
+      ],
+      "databaseId": "bloom",
+      "name": "Email Drafts",
+      "enabled": true,
+      "rowSecurity": true,
+      "columns": [
+        { "key": "toFieldMapping", "type": "text", "required": false, "array": false },
+        { "key": "cc", "type": "text", "required": false, "array": false },
+        { "key": "bcc", "type": "text", "required": false, "array": false },
+        { "key": "subject", "type": "text", "required": false, "array": false },
+        { "key": "body", "type": "longtext", "required": false, "array": false },
+        { "key": "attachmentFilename", "type": "text", "required": false, "array": false },
+        { "key": "attachmentsEnabled", "type": "boolean", "required": false, "array": false },
+        { "key": "bloomId", "type": "varchar", "required": false, "array": false, "size": 255 }
+      ],
+      "indexes": [
+        {
+          "key": "bloomId",
+          "type": "key",
+          "columns": ["bloomId"],
+          "lengths": [0],
+          "orders": []
+        }
+      ]
+    },
+    {
+      "$id": "send_jobs",
+      "$permissions": [
+        "create(\"users\")"
+      ],
+      "databaseId": "bloom",
+      "name": "Send Jobs",
+      "enabled": true,
+      "rowSecurity": true,
+      "columns": [
+        { "key": "ownerId", "type": "text", "required": false, "array": false },
+        { "key": "dataSourceId", "type": "text", "required": false, "array": false },
+        {
+          "key": "type",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "elements": ["email"],
+          "format": "enum"
+        },
+        {
+          "key": "status",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "elements": ["queued", "running", "completed", "failed"],
+          "format": "enum"
+        },
+        { "key": "totalRows", "type": "integer", "required": false, "array": false },
+        { "key": "processedRows", "type": "integer", "required": false, "array": false },
+        { "key": "failedRows", "type": "integer", "required": false, "array": false },
+        { "key": "createdAt", "type": "datetime", "required": false, "array": false },
+        { "key": "completedAt", "type": "datetime", "required": false, "array": false },
+        { "key": "bloomId", "type": "varchar", "required": false, "array": false, "size": 255 }
+      ],
+      "indexes": [
+        {
+          "key": "bloomId_createdAt",
+          "type": "key",
+          "columns": ["bloomId", "createdAt"],
+          "lengths": [0, 0],
+          "orders": []
+        }
+      ]
+    },
+    {
+      "$id": "send_job_rows",
+      "$permissions": [
+        "create(\"users\")"
+      ],
+      "databaseId": "bloom",
+      "name": "Send Job Rows",
+      "enabled": true,
+      "rowSecurity": true,
+      "columns": [
+        { "key": "ownerId", "type": "text", "required": false, "array": false },
+        { "key": "jobId", "type": "text", "required": false, "array": false },
+        { "key": "rowIndex", "type": "integer", "required": false, "array": false },
+        { "key": "recipient", "type": "text", "required": false, "array": false },
+        {
+          "key": "status",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "elements": ["pending", "sent", "failed"],
+          "format": "enum"
+        },
+        { "key": "errorMessage", "type": "longtext", "required": false, "array": false },
+        { "key": "attachmentFileId", "type": "text", "required": false, "array": false },
+        { "key": "sentAt", "type": "datetime", "required": false, "array": false },
+        { "key": "bloomId", "type": "varchar", "required": false, "array": false, "size": 255 }
+      ],
+      "indexes": [
+        {
+          "key": "bloomId",
+          "type": "key",
+          "columns": ["bloomId"],
+          "lengths": [0],
+          "orders": []
+        }
+      ]
+    }
+  ],
+  "buckets": [
+    {
+      "$id": "certificates",
+      "$permissions": [
+        "create(\"users\")"
+      ],
+      "fileSecurity": true,
+      "name": "Certificates",
+      "enabled": true,
+      "maximumFileSize": 10485760,
+      "allowedFileExtensions": ["png"],
+      "compression": "none",
+      "encryption": true,
+      "antivirus": true
+    },
+    {
+      "$id": "data_sources",
+      "$permissions": [
+        "create(\"users\")"
+      ],
+      "fileSecurity": true,
+      "name": "Data Sources",
+      "enabled": true,
+      "maximumFileSize": 10485760,
+      "allowedFileExtensions": ["csv"],
+      "compression": "none",
+      "encryption": true,
+      "antivirus": true
+    },
+    {
+      "$id": "exports",
+      "$permissions": [
+        "create(\"users\")"
+      ],
+      "fileSecurity": true,
+      "name": "Exports",
+      "enabled": true,
+      "maximumFileSize": 52428800,
+      "allowedFileExtensions": ["png"],
+      "compression": "none",
+      "encryption": true,
+      "antivirus": true
+    }
+  ],
+  "functions": [
+    {
+      "$id": "smtp_test",
+      "name": "SMTP Test",
+      "enabled": true,
+      "logging": true,
+      "runtime": "node-22",
+      "execute": ["users"],
+      "deploymentRetention": 7,
+      "scopes": [],
+      "events": [],
+      "schedule": "",
+      "timeout": 15,
+      "entrypoint": "index.js",
+      "commands": "npm install",
+      "ignore": "node_modules\n.tmp",
+      "path": "functions/smtp_test"
+    },
+    {
+      "$id": "send_queue",
+      "name": "Send Queue",
+      "enabled": true,
+      "logging": true,
+      "runtime": "node-22",
+      "execute": ["users"],
+      "deploymentRetention": 7,
+      "scopes": [],
+      "events": [],
+      "schedule": "",
+      "timeout": 15,
+      "entrypoint": "index.js",
+      "commands": "npm install",
+      "ignore": "node_modules\n.tmp",
+      "path": "functions/send_queue"
+    },
+    {
+      "$id": "render_certificate",
+      "name": "Render Certificate",
+      "enabled": true,
+      "logging": true,
+      "runtime": "node-22",
+      "execute": ["users"],
+      "deploymentRetention": 7,
+      "scopes": [],
+      "events": [],
+      "schedule": "",
+      "timeout": 15,
+      "entrypoint": "index.js",
+      "commands": "npm install",
+      "ignore": "node_modules\n.tmp",
+      "path": "functions/render_certificate"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "name": "smtp_test",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "version": "1.0.0"
+}
