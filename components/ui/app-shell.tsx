@@ -5,8 +5,9 @@ import { useEffect, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Brand } from "@/components/layout/brand";
+import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
+import { useLogout } from "@/features/auth/hooks/use-logout";
 import { getStoredSessionId } from "@/lib/appwrite/session";
-import { useCurrentUserQuery, useLogoutMutation } from "@/lib/appwrite/query-hooks";
 
 const nav = [
   ["Dashboard", "/dashboard"],
@@ -16,8 +17,8 @@ const nav = [
 export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
-  const currentUserQuery = useCurrentUserQuery();
-  const logoutMutation = useLogoutMutation();
+  const currentUserQuery = useCurrentUser();
+  const logoutMutation = useLogout();
   const signedIn = mounted
     ? (currentUserQuery.isFetched ? Boolean(currentUserQuery.data) : Boolean(getStoredSessionId()))
     : false;

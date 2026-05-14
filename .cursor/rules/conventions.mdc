@@ -1,0 +1,34 @@
+---
+description: Naming and file placement for the Bloom Next.js app
+globs: "**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Conventions
+
+## Naming
+
+- **React components:** PascalCase exports (`Dashboard`, `UserCard`), file names kebab-case (`dashboard.tsx`)
+- **Hooks:** camelCase with `use` prefix, file names kebab-case (`use-current-user.ts`)
+- **Route segments:** kebab-case folders under `app/` (`app/auth/callback/`)
+- **Non-component modules:** kebab-case (`auth-session-service.ts`, `query-keys.ts`)
+- **Service classes:** PascalCase (`AuthSessionService`); singleton export camelCase (`authSessionService`)
+- **Types / interfaces:** PascalCase for exported shapes (`User`, `Bloom`, `Integration`)
+
+## Logic & patterns
+
+- **Server Components by default.** Add `"use client"` only for interactivity, browser APIs, or client-only libraries (TanStack Query hooks).
+- **Colocate** feature-specific components and helpers under `features/<name>/` when they are not route-only.
+- **Shared primitives** live in `components/ui/` or `components/` at the repo root — avoid deep cross-imports between unrelated features.
+- **Services as classes with singleton export.** Methods are async and return plain data. Construct dependencies (SDK clients) in the constructor.
+- **Hooks call services, never SDKs directly.** Components call hooks, never services directly.
+
+## Placement
+
+- **Routes & layouts** → `app/` (thin: compose UI, wire loaders/actions)
+- **Route Handlers** → `app/api/<route>/route.ts` (validate input, delegate to feature services)
+- **Feature UI + hooks** → `features/<domain>/components`, `features/<domain>/hooks`
+- **Feature services** → `features/<domain>/services` (class + singleton)
+- **Shared UI** → `components/`
+- **Pure helpers** (no React, no env-specific side effects) → `lib/utils/` or `lib/tokens/` etc.
+- **Appwrite SDK** → only in `lib/appwrite/client.ts` (browser) and `lib/appwrite/server.ts` (Route Handlers)

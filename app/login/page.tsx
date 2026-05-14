@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { AuthPanel } from "@/features/auth/auth-panel";
+import { AuthPanel } from "@/features/auth/components/auth-panel";
 
 export default function LoginPage() {
   return (

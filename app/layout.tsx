@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AppwritePing } from "@/components/appwrite-ping";
+import { AppwritePing } from "@/components/common/appwrite-ping";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 

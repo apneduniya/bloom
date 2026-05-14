@@ -1,0 +1,48 @@
+---
+description: App Router structure, layers, and boundaries for Bloom
+alwaysApply: true
+---
+
+# Bloom — architecture
+
+## Principles
+
+- **Feature-based:** Group by domain under `features/<name>/` when logic or UI grows beyond a single route. Put **use-case orchestration** in `features/<name>/services/`, **state** in `stores/` (only when needed), **wiring** in `hooks/`, **UI** in `components/`, and **small constants** in `constants/` (not a dumping ground for business logic). Cross-component types go in `types/`.
+- **SOLID (pragmatic):** One module ≈ one reason to change. **lib** modules talk to one external system or protocol; **services** compose lib + feature rules; avoid fat files that mix HTTP, env keys, and UI concerns. No "pure SOLID" ceremony — keep boundaries obvious.
+- **DRY (pragmatic):** One definition for each rule or policy (validation schemas, request parsing, allowlists). Reuse through shared modules under `features/<name>/` or `lib/` — not by copy-pasting strings or logic into routes and components. If two call sites need the same orchestration, extract a service, hook, or small helper in the right layer rather than duplicating.
+- **Domain logic vs UI:** Prefer **`class`**es for **domain logic** — notably `features/*/services/` (orchestrators with cohesive methods, exported as singletons). Keep **React components** as **function components** (no class components for screens/widgets; no embedding domain rules inside components).
+- **Thin routes:** `app/` pages and layouts compose components; **Route Handlers** (`app/api/*/route.ts`) validate input via small helpers in `features/*/services` and delegate execution there — no long bodies of business logic in the route file.
+- **Clear boundaries:** External integrations in `lib/` (grouped by vendor, e.g. `lib/appwrite/`). **No network/SDK calls** from `lib/utils/`. UI in `components/` and `features/*/components`.
+- **Next.js reality check:** This repo targets **Next.js 16** with breaking differences vs older docs. Before changing routing, `fetch`, caching, or metadata APIs, read the matching guide under `node_modules/next/dist/docs/` (see `AGENTS.md`).
+
+## Folder shape
+
+- `app/` — Routes, `layout.tsx`, `loading.tsx`, `error.tsx`, Route Handlers under `app/api/`
+- `components/` — Reusable, route-agnostic UI primitives (`ui/`), layout chrome (`layout/`), cross-feature components (`common/`), and providers
+- `features/<name>/` — Domain slice:
+  - `components/` — Feature UI
+  - `hooks/` — React hooks for this domain (TanStack Query hooks live here)
+  - `services/` — Orchestration: call `lib/*`, enforce feature flows; **prefer classes** with singleton exports
+  - `constants/` — Stable keys / labels used across the feature (query keys, table IDs)
+  - `types/` — Shared feature types (DTOs, form shapes) when used in more than one file
+  - `stores/` — Client state (only when TanStack Query is not the right fit)
+- `lib/` — **Integrations and cross-cutting infrastructure:**
+  - `lib/appwrite/client.ts` — browser SDK factory
+  - `lib/appwrite/server.ts` — `node-appwrite` admin client for Route Handlers
+  - `lib/appwrite/{config,permissions,errors}.ts` — env/policy helpers
+  - `lib/tokens/`, `lib/export/` — pure helpers (no network/SDK)
+  - `lib/utils/` — no I/O (e.g. `cn`, URL helpers), re-exported via `index.ts`
+- `docs/` — Architecture and design docs
+
+## Import direction
+
+`lib` → `features` → `app` and `components` (features may import from `lib` and shared `components`, not the reverse).
+
+Avoid: `lib` importing from `features` or `app`.
+
+## Server vs client
+
+- Prefer **Server Components** for static structure and authoritative reads.
+- Use **Client Components** for state, events, and hooks that need the browser.
+- **Do not** import server-only modules (`lib/appwrite/server.ts`) into client component files — split or pass serializable props from a parent Server Component.
+- Secrets (`APPWRITE_API_KEY`) only in Route Handlers and server modules. Never in client bundles.

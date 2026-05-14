@@ -17,11 +17,6 @@ export const appwriteConfig = {
     sendJobs: "send_jobs",
     sendJobRows: "send_job_rows",
   },
-  functions: {
-    smtpTest: process.env.NEXT_PUBLIC_APPWRITE_SMTP_TEST_FUNCTION_ID ?? "smtp_test",
-    sendQueue: process.env.NEXT_PUBLIC_APPWRITE_SEND_QUEUE_FUNCTION_ID ?? "send_queue",
-    renderCertificate: process.env.NEXT_PUBLIC_APPWRITE_RENDER_CERT_FUNCTION_ID ?? "render_certificate",
-  },
 };
 
 export function hasAppwriteClientConfig() {

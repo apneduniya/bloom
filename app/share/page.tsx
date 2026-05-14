@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { AppShell } from "@/components/ui/app-shell";
-import { ShareWorkflow } from "@/features/share/share-workflow";
+import { ShareWorkflow } from "@/features/share/components/share-workflow";
 
 export default function SharePage() {
   return (

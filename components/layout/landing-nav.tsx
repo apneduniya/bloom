@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { Brand } from "./brand";
-import { useCurrentUserQuery } from "@/lib/appwrite/query-hooks";
+import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
 import { getStoredSessionId } from "@/lib/appwrite/session";
 
 export function LandingNav() {
-  const currentUserQuery = useCurrentUserQuery();
+  const currentUserQuery = useCurrentUser();
   const signedIn = currentUserQuery.isFetched
     ? Boolean(currentUserQuery.data)
     : Boolean(getStoredSessionId());
