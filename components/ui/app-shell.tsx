@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { Brand } from "@/components/layout/brand";
 import { getStoredSessionId } from "@/lib/appwrite/session";
 import { useCurrentUserQuery, useLogoutMutation } from "@/lib/appwrite/query-hooks";
 
@@ -11,9 +14,19 @@ const nav = [
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const router = useRouter();
+  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
   const currentUserQuery = useCurrentUserQuery();
   const logoutMutation = useLogoutMutation();
-  const signedIn = currentUserQuery.isFetched ? Boolean(currentUserQuery.data) : Boolean(getStoredSessionId());
+  const signedIn = mounted
+    ? (currentUserQuery.isFetched ? Boolean(currentUserQuery.data) : Boolean(getStoredSessionId()))
+    : false;
+
+  useEffect(() => {
+    if (currentUserQuery.isFetched && !currentUserQuery.data) {
+      router.replace("/login");
+    }
+  }, [currentUserQuery.isFetched, currentUserQuery.data, router]);
 
   async function handleLogout() {
     await logoutMutation.mutateAsync();
@@ -23,10 +36,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="app-shell">
       <header className="top-nav">
-        <Link href="/" className="brand">
-          <span className="brand-mark">B</span>
-          Bloom
-        </Link>
+        <Brand href="/?home=true" />
         <nav>
           {signedIn
             ? nav.map(([label, href]) => (
