@@ -183,20 +183,20 @@ function EditorWorkspaceLoaded({ initialBloom }: { initialBloom: Bloom }) {
           </span>
         </div>
         <div className="toolbar">
-          <Button variant="secondary" onClick={() => setZoom((value) => value - 0.1)}>
+          <Button variant="outline" size="sm" onClick={() => setZoom((value) => value - 0.1)}>
             -
           </Button>
           <span className="zoom-label">{Math.round(zoom * 100)}%</span>
-          <Button variant="secondary" onClick={() => setZoom((value) => value + 0.1)}>
+          <Button variant="outline" size="sm" onClick={() => setZoom((value) => value + 0.1)}>
             +
           </Button>
-          <Button variant="secondary" onClick={() => persist()}>
+          <Button variant="outline" size="sm" onClick={() => persist()}>
             Save
           </Button>
-          <Button onClick={() => exportBloomPng(bloom, previewRow)}>Export PNG</Button>
-          <Link className="button button-secondary" href={`/share?bloomId=${bloom.id}`}>
-            Share
-          </Link>
+          <Button size="sm" onClick={() => exportBloomPng(bloom, previewRow)}>Export PNG</Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/share?bloomId=${bloom.id}`}>Share</Link>
+          </Button>
         </div>
       </header>
 
@@ -207,7 +207,7 @@ function EditorWorkspaceLoaded({ initialBloom }: { initialBloom: Bloom }) {
           <section>
             <div className="panel-heading">
               <h2>Layers</h2>
-              <Button variant="secondary" onClick={addLayer}>
+              <Button variant="outline" size="sm" onClick={addLayer}>
                 Add
               </Button>
             </div>
@@ -231,7 +231,7 @@ function EditorWorkspaceLoaded({ initialBloom }: { initialBloom: Bloom }) {
           <section>
             <div className="panel-heading">
               <h2>CSV data</h2>
-              <label className="button button-secondary">
+              <label className="button button-secondary" style={{ cursor: "pointer" }}>
                 Upload
                 <input type="file" accept=".csv,text/csv" onChange={uploadCsv} hidden />
               </label>
@@ -404,10 +404,10 @@ function PropertiesPanel({
       <div className="panel-heading">
         <h2>Properties</h2>
         <div className="mini-actions">
-          <Button variant="secondary" onClick={duplicateLayer}>
+          <Button variant="outline" size="sm" onClick={duplicateLayer}>
             Duplicate
           </Button>
-          <Button variant="danger" onClick={deleteLayer}>
+          <Button variant="destructive" size="sm" onClick={deleteLayer}>
             Delete
           </Button>
         </div>

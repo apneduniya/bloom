@@ -1,62 +1,129 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
-import { Field, Input } from "@/components/ui/field";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { StatusPill } from "@/components/ui/status-pill";
 import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
 import type { User } from "@/features/auth/types";
 import { useIntegration } from "@/features/integrations/hooks/use-integration";
 import { useSaveIntegration } from "@/features/integrations/hooks/use-save-integration";
 import { useTestIntegration } from "@/features/integrations/hooks/use-test-integration";
-import { validateIntegration } from "@/features/integrations/services/integration-validator";
 import type { Integration } from "@/features/integrations/types";
 import { createId } from "@/lib/utils";
+
+const schema = z.object({
+  smtpHost: z.string().min(1, "SMTP host is required"),
+  smtpPort: z
+    .string()
+    .refine((v) => !isNaN(Number(v)) && Number(v) >= 1 && Number(v) <= 65535, {
+      message: "Port must be 1–65535",
+    }),
+  smtpUser: z.string().min(1, "SMTP user is required"),
+  smtpPassword: z.string().optional(),
+  fromName: z.string().min(1, "From name is required"),
+  fromEmail: z.string().email("Must be a valid email"),
+});
+
+type FormValues = z.infer<typeof schema>;
 
 export function IntegrationsPanel() {
   const currentUserQuery = useCurrentUser();
   const user = currentUserQuery.data;
   const integrationQuery = useIntegration(user?.id);
-  if (!currentUserQuery.isFetched || (user && integrationQuery.isPending)) return <main className="page-pad">Loading integration...</main>;
-  if (integrationQuery.error) return <main className="page-pad"><p className="form-error">{integrationQuery.error instanceof Error ? integrationQuery.error.message : "Could not load SMTP integration."}</p></main>;
+  if (!currentUserQuery.isFetched || (user && integrationQuery.isPending))
+    return <main className="page-pad">Loading integration...</main>;
+  if (integrationQuery.error)
+    return (
+      <main className="page-pad">
+        <p className="form-error">
+          {integrationQuery.error instanceof Error
+            ? integrationQuery.error.message
+            : "Could not load SMTP integration."}
+        </p>
+      </main>
+    );
   if (!user) return <main className="page-pad">Redirecting to sign in...</main>;
 
-  return <IntegrationsForm key={user.id} user={user} initialIntegration={integrationQuery.data ?? null} />;
+  return (
+    <IntegrationsForm
+      key={user.id}
+      user={user}
+      initialIntegration={integrationQuery.data ?? null}
+    />
+  );
 }
 
-function IntegrationsForm({ user, initialIntegration }: { user: User; initialIntegration: Integration | null }) {
+function IntegrationsForm({
+  user,
+  initialIntegration,
+}: {
+  user: User;
+  initialIntegration: Integration | null;
+}) {
   const saveIntegrationMutation = useSaveIntegration(user.id);
   const testIntegrationMutation = useTestIntegration(user.id);
-  const [secret, setSecret] = useState("");
-  const [error, setError] = useState("");
-  const [form, setForm] = useState<Integration>(() => initialIntegration ?? emptyIntegration(user.id));
 
-  async function submit(event: FormEvent, test = false) {
-    event.preventDefault();
-    const validation = validateIntegration(form, secret);
-    if (!validation.ok) {
-      setError(validation.errors.join(" "));
-      return;
-    }
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      smtpHost: initialIntegration?.smtpHost ?? "",
+      smtpPort: String(initialIntegration?.smtpPort ?? 587),
+      smtpUser: initialIntegration?.smtpUser ?? "",
+      smtpPassword: "",
+      fromName: initialIntegration?.fromName ?? "Bloom",
+      fromEmail: initialIntegration?.fromEmail ?? "",
+    },
+  });
 
-    const next: Integration = {
-      ...form,
+  async function submit(values: FormValues, test = false) {
+    const base: Integration = {
+      id: initialIntegration?.id ?? createId("integration"),
       ownerId: user.id,
-      status: test ? "draft" : form.status,
+      providerType: "smtp",
+      smtpHost: values.smtpHost,
+      smtpPort: Number(values.smtpPort),
+      smtpUser: values.smtpUser,
+      fromName: values.fromName,
+      fromEmail: values.fromEmail,
+      status: test ? "draft" : (initialIntegration?.status ?? "draft"),
       errorMessage: undefined,
     };
+
     try {
-      const saved = test
-        ? await testIntegrationMutation.mutateAsync({ integration: next, secret })
-        : await saveIntegrationMutation.mutateAsync(next);
-      setForm(saved);
-      setSecret("");
-      setError("");
+      if (test) {
+        await testIntegrationMutation.mutateAsync({
+          integration: base,
+          secret: values.smtpPassword ?? "",
+        });
+      } else {
+        await saveIntegrationMutation.mutateAsync(base);
+      }
+      form.setValue("smtpPassword", "");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Could not save SMTP settings.");
+      form.setError("root", {
+        message:
+          cause instanceof Error
+            ? cause.message
+            : test
+              ? "Connection test failed."
+              : "Could not save SMTP settings.",
+      });
     }
   }
+
+  const status = initialIntegration?.status ?? "draft";
 
   return (
     <main className="settings-page">
@@ -65,55 +132,128 @@ function IntegrationsForm({ user, initialIntegration }: { user: User; initialInt
           <p className="eyebrow">SMTP integration</p>
           <h1>Email delivery</h1>
           <p className="muted">
-            SMTP settings are saved to Appwrite and verification runs through the configured Function.
+            SMTP settings are saved to Appwrite and verification runs through the configured
+            Function.
           </p>
         </div>
-        <StatusPill tone={form.status === "verified" ? "good" : form.status === "error" ? "bad" : "warn"}>{form.status}</StatusPill>
+        <StatusPill
+          tone={status === "verified" ? "good" : status === "error" ? "bad" : "warn"}
+        >
+          {status}
+        </StatusPill>
       </section>
 
-      <form className="settings-form" onSubmit={(event) => submit(event)}>
-        <div className="two-col">
-          <Field label="SMTP host">
-            <Input value={form.smtpHost} onChange={(event) => setForm({ ...form, smtpHost: event.target.value, status: "draft" })} />
-          </Field>
-          <Field label="SMTP port">
-            <Input type="number" value={form.smtpPort} onChange={(event) => setForm({ ...form, smtpPort: Number(event.target.value), status: "draft" })} />
-          </Field>
-          <Field label="SMTP user">
-            <Input value={form.smtpUser} onChange={(event) => setForm({ ...form, smtpUser: event.target.value, status: "draft" })} />
-          </Field>
-          <Field label="SMTP password">
-            <Input type="password" value={secret} placeholder={form.encryptedSecretRef ? "Saved secret reference" : ""} onChange={(event) => setSecret(event.target.value)} />
-          </Field>
-          <Field label="From name">
-            <Input value={form.fromName} onChange={(event) => setForm({ ...form, fromName: event.target.value, status: "draft" })} />
-          </Field>
-          <Field label="From email">
-            <Input type="email" value={form.fromEmail} onChange={(event) => setForm({ ...form, fromEmail: event.target.value, status: "draft" })} />
-          </Field>
-        </div>
-        {error ? <p className="form-error">{error}</p> : null}
-        <div className="row-actions">
-          <Button type="submit">Save SMTP</Button>
-          <Button type="button" variant="secondary" onClick={(event) => submit(event, true)}>
-            Test connection
-          </Button>
-        </div>
-      </form>
+      <Form {...form}>
+        <form
+          className="settings-form"
+          onSubmit={form.handleSubmit((values) => submit(values, false))}
+        >
+          <div className="two-col">
+            <FormField
+              control={form.control}
+              name="smtpHost"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>SMTP host</FormLabel>
+                  <FormControl>
+                    <Input placeholder="smtp.example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="smtpPort"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>SMTP port</FormLabel>
+                  <FormControl>
+                    <Input type="number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="smtpUser"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>SMTP user</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="smtpPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>SMTP password</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder={
+                        initialIntegration?.encryptedSecretRef ? "Saved secret reference" : ""
+                      }
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="fromName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>From name</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="fromEmail"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>From email</FormLabel>
+                  <FormControl>
+                    <Input type="email" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {form.formState.errors.root ? (
+            <p className="form-error">{form.formState.errors.root.message}</p>
+          ) : null}
+
+          <div className="row-actions">
+            <Button type="submit" disabled={form.formState.isSubmitting}>
+              Save SMTP
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={form.formState.isSubmitting}
+              onClick={form.handleSubmit((values) => submit(values, true))}
+            >
+              Test connection
+            </Button>
+          </div>
+        </form>
+      </Form>
     </main>
   );
-}
-
-function emptyIntegration(ownerId: string): Integration {
-  return {
-    id: createId("integration"),
-    ownerId,
-    providerType: "smtp",
-    smtpHost: "",
-    smtpPort: 587,
-    smtpUser: "",
-    fromName: "Bloom",
-    fromEmail: "",
-    status: "draft",
-  };
 }

@@ -1,13 +1,30 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
-import { Field, Input } from "@/components/ui/field";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
 import { useLogout } from "@/features/auth/hooks/use-logout";
 import { authSessionService } from "@/features/auth/services/auth-session-service";
+import { useState } from "react";
+
+const schema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+});
+
+type FormValues = z.infer<typeof schema>;
 
 export function AuthPanel() {
   const router = useRouter();
@@ -15,20 +32,23 @@ export function AuthPanel() {
   const currentUserQuery = useCurrentUser();
   const logoutMutation = useLogout();
   const user = currentUserQuery.data;
-  const [email, setEmail] = useState(user?.email ?? "");
   const [status, setStatus] = useState("");
-  const [error, setError] = useState("");
   const next = searchParams.get("next") ?? "/dashboard";
 
-  async function submit(event: FormEvent) {
-    event.preventDefault();
-    setError("");
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { email: user?.email ?? "" },
+  });
+
+  async function onSubmit({ email }: FormValues) {
     setStatus("");
     try {
       await authSessionService.requestMagicLink(email.trim(), next);
       setStatus("Check your email for the Bloom sign-in link.");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Could not send sign-in link.");
+      form.setError("email", {
+        message: cause instanceof Error ? cause.message : "Could not send sign-in link.",
+      });
     }
   }
 
@@ -47,22 +67,45 @@ export function AuthPanel() {
             Use a magic link or Google OAuth to access your private Bloom workspace.
           </p>
         </div>
-        <form onSubmit={submit} className="stack">
-          <Field label="Email">
-            <Input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
-          </Field>
-          {error ? <p className="form-error">{error}</p> : null}
-          {status ? <p className="success-note">{status}</p> : null}
-          <Button type="submit">Email magic link</Button>
-          <Button type="button" variant="secondary" onClick={() => authSessionService.startGoogleOAuth(next)}>
-            Continue with Google
-          </Button>
-          {currentUserQuery.isFetched && user ? (
-            <Button type="button" variant="ghost" onClick={handleLogout}>
-              Log out {user.email}
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="stack">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="you@example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {status ? <p className="success-note">{status}</p> : null}
+
+            <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+              {form.formState.isSubmitting ? "Sending..." : "Email magic link"}
             </Button>
-          ) : null}
-        </form>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => authSessionService.startGoogleOAuth(next)}
+            >
+              Continue with Google
+            </Button>
+
+            {currentUserQuery.isFetched && user ? (
+              <Button type="button" variant="ghost" className="w-full" onClick={handleLogout}>
+                Log out {user.email}
+              </Button>
+            ) : null}
+          </form>
+        </Form>
       </section>
     </main>
   );

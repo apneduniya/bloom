@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
 import { useSessionStore } from "@/features/auth/stores/session-store";
 
@@ -16,8 +17,8 @@ export function HomeAuthCta() {
   const label = isAuthed ? "Dashboard" : "Sign in";
 
   return (
-    <Link href={href} className="button button-secondary">
-      {label}
-    </Link>
+    <Button variant="outline" asChild>
+      <Link href={href}>{label}</Link>
+    </Button>
   );
 }

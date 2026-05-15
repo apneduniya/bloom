@@ -5,6 +5,8 @@ import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Brand } from "@/components/layout/brand";
+import { ThemeToggle } from "@/components/common/theme-toggle";
+import { Button } from "@/components/ui/button";
 import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
 import { useLogout } from "@/features/auth/hooks/use-logout";
 import { useSessionStore } from "@/features/auth/stores/session-store";
@@ -39,15 +41,24 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="app-shell">
       <header className="top-nav">
         <Brand href="/?home=true" />
-        <nav>
+        <nav className="flex items-center gap-3">
           {signedIn
             ? nav.map(([label, href]) => (
-                <Link key={href} href={href}>
+                <Link key={href} href={href} className="text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors">
                   {label}
                 </Link>
               ))
             : null}
-          {signedIn ? <button className="nav-button" onClick={handleLogout}>Logout</button> : <Link href="/login">Login</Link>}
+          {signedIn ? (
+            <Button variant="ghost" size="sm" onClick={handleLogout}>
+              Logout
+            </Button>
+          ) : (
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/login">Login</Link>
+            </Button>
+          )}
+          <ThemeToggle />
         </nav>
       </header>
       {children}

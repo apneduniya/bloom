@@ -86,13 +86,13 @@ export function Dashboard() {
                   {bloom.lastSavedAt ? new Date(bloom.lastSavedAt).toLocaleString() : "never"}
                 </p>
                 <div className="row-actions">
-                  <Link className="button button-primary" href={`/editor?bloomId=${bloom.id}`}>
-                    Open
-                  </Link>
-                  <Link className="button button-secondary" href={`/share?bloomId=${bloom.id}`}>
-                    Share
-                  </Link>
-                  <Button variant="danger" onClick={() => handleDelete(bloom.id)}>
+                  <Button size="sm" asChild>
+                    <Link href={`/editor?bloomId=${bloom.id}`}>Open</Link>
+                  </Button>
+                  <Button size="sm" variant="outline" asChild>
+                    <Link href={`/share?bloomId=${bloom.id}`}>Share</Link>
+                  </Button>
+                  <Button size="sm" variant="destructive" onClick={() => handleDelete(bloom.id)}>
                     Delete
                   </Button>
                 </div>
