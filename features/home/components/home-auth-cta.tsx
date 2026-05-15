@@ -1,28 +1,17 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
-import { getStoredSessionId } from "@/lib/appwrite/session";
-
-function subscribeToSession(callback: () => void) {
-  window.addEventListener("storage", callback);
-  return () => window.removeEventListener("storage", callback);
-}
-
-function getSessionSnapshot() {
-  return Boolean(getStoredSessionId());
-}
-
-function getServerSessionSnapshot() {
-  return false;
-}
+import { useSessionStore } from "@/features/auth/stores/session-store";
 
 export function HomeAuthCta() {
   const currentUserQuery = useCurrentUser();
-  const hasStoredSession = useSyncExternalStore(subscribeToSession, getSessionSnapshot, getServerSessionSnapshot);
+  const sessionId = useSessionStore((state) => state.sessionId);
+  const hasHydrated = useSessionStore((state) => state.hasHydrated);
 
-  const isAuthed = currentUserQuery.isFetched ? Boolean(currentUserQuery.data) : hasStoredSession;
+  const isAuthed = currentUserQuery.isFetched
+    ? Boolean(currentUserQuery.data)
+    : hasHydrated && Boolean(sessionId);
   const href = isAuthed ? "/dashboard" : "/login";
   const label = isAuthed ? "Dashboard" : "Sign in";
 

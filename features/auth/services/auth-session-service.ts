@@ -3,7 +3,7 @@
 import { ID, OAuthProvider, type Account, type Models } from "appwrite";
 
 import { account, client } from "@/lib/appwrite/client";
-import { clearStoredSessionId, storeSessionId } from "@/lib/appwrite/session";
+import { useSessionStore } from "@/features/auth/stores/session-store";
 import type { User } from "@/features/auth/types";
 
 /**
@@ -37,7 +37,7 @@ export class AuthSessionService {
 
   async completeSession(userId: string, secret: string): Promise<User | null> {
     const session = await this.account.createSession(userId, secret);
-    storeSessionId(session.$id);
+    useSessionStore.getState().setSessionId(session.$id);
     client.setSession(session.$id);
     return this.getCurrentUser();
   }
@@ -46,7 +46,7 @@ export class AuthSessionService {
     try {
       await this.account.deleteSession("current");
     } finally {
-      clearStoredSessionId();
+      useSessionStore.getState().clear();
       client.setSession("");
     }
   }

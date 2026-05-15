@@ -10,6 +10,7 @@ import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
 import { useBloom } from "@/features/blooms/hooks/use-bloom";
 import { useSaveBloom } from "@/features/blooms/hooks/use-save-bloom";
 import { useSaveDataSource } from "@/features/blooms/hooks/use-save-data-source";
+import { useWorkspaceStore } from "@/features/editor/stores/workspace-store";
 import { createDefaultLayer } from "@/features/blooms/services/bloom-factory";
 import type { Bloom, TextLayer } from "@/features/blooms/types";
 import { createDataSource } from "@/features/data-sources/services/data-source-factory";
@@ -51,10 +52,16 @@ function EditorWorkspaceLoaded({ initialBloom }: { initialBloom: Bloom }) {
   const saveBloomMutation = useSaveBloom();
   const saveDataSourceMutation = useSaveDataSource();
   const [bloom, setBloom] = useState<Bloom>(initialBloom);
-  const [selectedId, setSelectedId] = useState(initialBloom.layers[0]?.id ?? "");
   const [saveState, setSaveState] = useState<"saved" | "dirty" | "saving" | "failed">("saved");
-  const [zoom, setZoom] = useState(0.7);
   const [error, setError] = useState("");
+  const selectedId = useWorkspaceStore((state) => state.selectedId);
+  const setSelectedId = useWorkspaceStore((state) => state.setSelectedId);
+  const zoom = useWorkspaceStore((state) => state.zoom);
+  const setZoom = useWorkspaceStore((state) => state.setZoom);
+
+  useEffect(() => {
+    useWorkspaceStore.getState().reset(initialBloom.layers[0]?.id ?? "");
+  }, [initialBloom.id, initialBloom.layers]);
 
   useEffect(() => {
     if (saveState !== "dirty") return;
@@ -176,11 +183,11 @@ function EditorWorkspaceLoaded({ initialBloom }: { initialBloom: Bloom }) {
           </span>
         </div>
         <div className="toolbar">
-          <Button variant="secondary" onClick={() => setZoom((value) => Math.max(0.25, value - 0.1))}>
+          <Button variant="secondary" onClick={() => setZoom((value) => value - 0.1)}>
             -
           </Button>
           <span className="zoom-label">{Math.round(zoom * 100)}%</span>
-          <Button variant="secondary" onClick={() => setZoom((value) => Math.min(1.4, value + 0.1))}>
+          <Button variant="secondary" onClick={() => setZoom((value) => value + 0.1)}>
             +
           </Button>
           <Button variant="secondary" onClick={() => persist()}>
@@ -265,7 +272,7 @@ function EditorWorkspaceLoaded({ initialBloom }: { initialBloom: Bloom }) {
           </section>
         </aside>
 
-        <Canvas bloom={bloom} selectedId={selectedId} setSelectedId={setSelectedId} updateLayer={updateLayer} zoom={zoom} previewRow={previewRow} />
+        <Canvas bloom={bloom} updateLayer={updateLayer} previewRow={previewRow} />
 
         <PropertiesPanel
           layer={selectedLayer}
@@ -280,21 +287,18 @@ function EditorWorkspaceLoaded({ initialBloom }: { initialBloom: Bloom }) {
 
 function Canvas({
   bloom,
-  selectedId,
-  setSelectedId,
   updateLayer,
-  zoom,
   previewRow,
 }: {
   bloom: Bloom;
-  selectedId: string;
-  setSelectedId: (id: string) => void;
   updateLayer: (id: string, patch: Partial<TextLayer>, mode?: "dirty" | "immediate") => void;
-  zoom: number;
   previewRow: Record<string, string>;
 }) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState<{ id: string; mode: "move" | "resize"; startX: number; startY: number; layer: TextLayer } | null>(null);
+  const selectedId = useWorkspaceStore((state) => state.selectedId);
+  const setSelectedId = useWorkspaceStore((state) => state.setSelectedId);
+  const zoom = useWorkspaceStore((state) => state.zoom);
 
   function pointerDown(event: PointerEvent, layer: TextLayer, mode: "move" | "resize") {
     if (layer.locked) return;

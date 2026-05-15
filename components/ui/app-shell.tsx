@@ -1,27 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Brand } from "@/components/layout/brand";
 import { useCurrentUser } from "@/features/auth/hooks/use-current-user";
 import { useLogout } from "@/features/auth/hooks/use-logout";
-import { getStoredSessionId } from "@/lib/appwrite/session";
+import { useSessionStore } from "@/features/auth/stores/session-store";
 
 const nav = [
-  ["Dashboard", "/dashboard"],
+  // ["Dashboard", "/dashboard"],
   ["Integrations", "/integrations"],
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
   const currentUserQuery = useCurrentUser();
   const logoutMutation = useLogout();
-  const signedIn = mounted
-    ? (currentUserQuery.isFetched ? Boolean(currentUserQuery.data) : Boolean(getStoredSessionId()))
-    : false;
+  const sessionId = useSessionStore((state) => state.sessionId);
+  const hasHydrated = useSessionStore((state) => state.hasHydrated);
+  const signedIn = currentUserQuery.isFetched
+    ? Boolean(currentUserQuery.data)
+    : hasHydrated && Boolean(sessionId);
 
   useEffect(() => {
     if (currentUserQuery.isFetched && !currentUserQuery.data) {

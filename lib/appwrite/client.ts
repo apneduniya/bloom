@@ -1,6 +1,6 @@
 import { Account, Client, Storage, TablesDB } from "appwrite";
 import { appwriteConfig } from "./config";
-import { getStoredSessionId } from "./session";
+import { useSessionStore } from "@/features/auth/stores/session-store";
 
 export const client = new Client();
 
@@ -8,7 +8,7 @@ if (appwriteConfig.endpoint && appwriteConfig.projectId) {
   client.setEndpoint(appwriteConfig.endpoint).setProject(appwriteConfig.projectId);
 }
 
-const sessionId = getStoredSessionId();
+const sessionId = useSessionStore.getState().sessionId;
 if (sessionId) {
   client.setSession(sessionId);
 }
